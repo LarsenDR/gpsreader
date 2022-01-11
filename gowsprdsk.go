@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
 	"strings"
-	"unicode"
 
 	"go.bug.st/serial"
 )
@@ -43,30 +43,28 @@ func main() {
 		log.Fatal(err)
 	}
 
-	f := func(c rune) bool {
-		return !unicode.IsLetter(c) && !unicode.IsNumber(c)
-	}
-
-	buff := make([]byte, 100)
-	for {
-		// Reads up to 100 bytes
-		n, err := port.Read(buff)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		data := string(buff[:n])
-		//key := string(buff[:6])
+	scanner := bufio.NewScanner(port)
+	for scanner.Scan() {
+		data := scanner.Text()
 
 		switch {
+		case strings.Contains(data, "$GNGSA"):
+			// fmt.Printf("%s\n", data)
 		case strings.Contains(data, "$GNGGA"):
-			fmt.Printf("Fields are: %q\n", strings.FieldsFunc(data, f))
-			//fmt.Printf("%s", data)
-			// case strings.Contains(data, "$GNRMC"):
-			// 	fmt.Printf("%s", data)
-			// case strings.Contains(data, "$GNGLL"):
-			// 	fmt.Printf("%s", data)
+			// fmt.Printf("Fields are: %q\n", strings.Split(data, ",\n"))
+			// fmt.Printf("%s\n", data)
+		case strings.Contains(data, "$GNRMC"):
+			fmt.Printf("Fields are: %q\n", strings.Split(data, ","))
+			fmt.Printf("%s\n", data)
+			// fmt.Printf("\n")
+		case strings.Contains(data, "$GNGLL"):
+			// fmt.Printf("\n")
+		case strings.Contains(data, "$GNVTG"):
+			// fmt.Printf("\n")
 		}
-
 	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
 }
